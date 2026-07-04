@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+supabase
+langchain
+langchain-openai
+langchain-google-genai
+langchain-text-splitters
+google-generativeai
+pydantic
+python-dotenv
+python-multipart
+pymupdf
+pillow
+pytesseract
