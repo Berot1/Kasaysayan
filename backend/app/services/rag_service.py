@@ -94,27 +94,23 @@ def extract_text_from_file(file_bytes: bytes, mime_type: str) -> str:
         text = pytesseract.image_to_string(image)
     return text
 
-def process_and_ingest(text: str, filename: str):
+def process_and_ingest(text: str, filename: str, notebook_id: str):
     print(f"DEBUG: Processing {filename}. Text length: {len(text)}")
     chunks = process_and_chunk(text)
     
-    batch_size = 100  # Google allows up to 100 chunks per request
+    batch_size = 100
     total_chunks = len(chunks)
     
-    # Loop through chunks in massive blocks of 100
     for i in range(0, total_chunks, batch_size):
         batch = chunks[i:i + batch_size]
-        print(f"Embedding batch {i+1} to {min(i+batch_size, total_chunks)} out of {total_chunks}...")
-        
-        # ONE API CALL instead of 100!
         vectors = get_embeddings_batch(batch)
         
-        # Save them to the database
         for j, chunk in enumerate(batch):
             supabase.table("documents").insert({
                 "content": chunk,
                 "embedding": vectors[j],
-                "metadata": {"filename": filename}
+                "metadata": {"filename": filename, "notebook_id": notebook_id}, # <-- Add here for easy filtering
+                "notebook_id": notebook_id # <-- Saves to your dedicated column
             }).execute()
             
         print("Batch saved successfully! Pausing for 10 seconds to respect rate limits...")
