@@ -7,13 +7,17 @@ import { Landmark, Loader2, ShieldCheck, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('signup') !== 'true';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
   // OTP States
-  const [otpSent] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -50,17 +54,17 @@ export default function AuthPage() {
 
         // Use signUp with email and password
         const { error } = await supabase.auth.signUp({ 
-          email, 
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`
-          }
+            email, 
+            password,
+            options: {
+                emailRedirectTo: `${window.location.origin}/dashboard`
+            }
         });
-        
         if (error) throw error;
         
-        // Show a message telling them to click the link in their email
-        setMessage("Check your email to verify your account. Once verified, you can sign in.");
+        // Now this will correctly update the UI to show the verification step
+        setOtpSent(true); 
+        setMessage("Check your email to verify your account.");
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

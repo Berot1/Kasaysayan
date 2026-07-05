@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -11,6 +14,7 @@ import {
   Landmark,
 } from 'lucide-react';
 import { InteractiveFolderGallery } from '@/app/components/ui/InteractiveFolderGallery';
+import { supabase } from '@/lib/supabaseClient';
 
 const RIZAL_PORTRAIT = 'https://commons.wikimedia.org/wiki/Special:FilePath/Jose_Rizal_full.jpg?width=300';
 const KATIPUNAN_FLAG = 'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Katipunan.svg?width=300';
@@ -19,6 +23,35 @@ const BONIFACIO_PORTRAIT = 'https://commons.wikimedia.org/wiki/Special:FilePath/
 const NOLI_COVER = 'https://commons.wikimedia.org/wiki/Special:FilePath/Noli_Me_Tangere.jpg?width=300';
 
 export default function LandingPage() {
+  const [getStartedHref, setGetStartedHref] = useState('/auth?signup=true');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveDestination = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (isMounted) {
+        setGetStartedHref(session ? '/dashboard' : '/auth?signup=true');
+      }
+    };
+
+    resolveDestination();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) {
+        setGetStartedHref(session ? '/dashboard' : '/auth?signup=true');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-charcoal font-sans antialiased selection:bg-muted">
       
@@ -41,7 +74,7 @@ export default function LandingPage() {
             </Link>
             {/* Change href to /auth */}
             <Link
-              href="/auth"
+              href={getStartedHref}
               className="text-sm font-medium px-4 py-2 rounded-md border border-charcoal hover:bg-charcoal hover:text-background transition-colors focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
             >
               Get started

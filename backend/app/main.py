@@ -13,7 +13,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",   # Next.js local development
         "http://127.0.0.1:3000",   # Next.js alternative local IP
-        "https://kasaysayan.vercel.app",
+        "https://kasaysayan-archive.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],           # Allows all standard methods (GET, POST, etc.)
