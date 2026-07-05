@@ -45,13 +45,14 @@ def get_embeddings_batch(texts: list):
     )
     return embeddings.embed_documents(texts)
 
-def search_documents(query_vector: list, top_k: int = 3, filter_dict: dict = {}):
+def search_documents(query_vector: list, user_id: str, top_k: int = 3, filter_dict: dict = {}):
     response = supabase.rpc(
         "match_documents",
         {
             "query_embedding": query_vector, 
             "match_threshold": 0.5, 
             "match_count": top_k, 
+            "p_user_id": user_id,  
             "filter": filter_dict
         },
     ).execute()
@@ -94,7 +95,7 @@ def extract_text_from_file(file_bytes: bytes, mime_type: str) -> str:
         text = pytesseract.image_to_string(image)
     return text
 
-def process_and_ingest(text: str, filename: str, notebook_id: str):
+def process_and_ingest(text: str, filename: str, user_id: str, notebook_id: str = "default"):
     print(f"DEBUG: Processing {filename}. Text length: {len(text)}")
     chunks = process_and_chunk(text)
     
@@ -109,8 +110,9 @@ def process_and_ingest(text: str, filename: str, notebook_id: str):
             supabase.table("documents").insert({
                 "content": chunk,
                 "embedding": vectors[j],
-                "metadata": {"filename": filename, "notebook_id": notebook_id}, # <-- Add here for easy filtering
-                "notebook_id": notebook_id # <-- Saves to your dedicated column
+                "metadata": {"filename": filename, "notebook_id": notebook_id}, 
+                "notebook_id": notebook_id,
+                "user_id": user_id # <-- Save the document to this specific user
             }).execute()
             
         print("Batch saved successfully! Pausing for 10 seconds to respect rate limits...")

@@ -35,11 +35,13 @@ export default function LandingPage() {
             <Link href="#how-it-works" className="hidden sm:block text-sm text-stone hover:text-charcoal transition-colors">
               How it works
             </Link>
-            <Link href="/workspace" className="text-sm text-stone hover:text-charcoal transition-colors">
+            {/* Change href to /auth */}
+            <Link href="/auth" className="text-sm text-stone hover:text-charcoal transition-colors">
               Sign in
             </Link>
+            {/* Change href to /auth */}
             <Link
-              href="/workspace"
+              href="/auth"
               className="text-sm font-medium px-4 py-2 rounded-md border border-charcoal hover:bg-charcoal hover:text-background transition-colors focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
             >
               Get started
