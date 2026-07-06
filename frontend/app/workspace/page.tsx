@@ -20,7 +20,7 @@ export default function Workspace() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
   
-  const BACKEND_URL = 'https://kasaysayan.onrender.com';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
   const fetchExistingDocuments = async (token: string) => {
     try {

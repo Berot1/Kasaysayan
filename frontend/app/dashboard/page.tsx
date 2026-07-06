@@ -8,17 +8,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   Search, Settings, Landmark, User, Plus, Loader2, LogOut, 
-  LayoutGrid, List, ChevronDown, MoreVertical, Trash2, Edit2, Pin, Globe
+  LayoutGrid, List, ChevronDown, MoreVertical, Trash2, Edit2, Pin, Globe 
 } from 'lucide-react';
 import { ArchiveCard } from '../components/ui/ArchiveCard';
 
-const BACKEND_URL = 'https://kasaysayan.onrender.com';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
 interface Notebook {
   id: string;
   title: string;
   updated_at: string;
   created_at: string;
+  pinned?: boolean | null;
   sourceCount?: number;
 }
 
@@ -39,43 +40,88 @@ export default function Dashboard() {
   
   const router = useRouter();
 
-  // List View Dropdown State management
+  // Dropdown State management
   const [openListDropdownId, setOpenListDropdownId] = useState<string | null>(null);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  
   const listDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (listDropdownRef.current && !listDropdownRef.current.contains(event.target as Node)) {
         setOpenListDropdownId(null);
       }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Handle actions for both Grid (ArchiveCard) and List views
+  // PERMANENT DATABASE ACTIONS
   const handleCardAction = async (action: 'delete' | 'edit' | 'pin', id: string, currentTitle: string) => {
-    setOpenListDropdownId(null); // Close list dropdown if open
+    setOpenListDropdownId(null); 
     
     if (action === 'delete') {
       const confirmDelete = window.confirm(`Are you sure you want to delete "${currentTitle}"?`);
       if (confirmDelete) {
-        // Optimistically remove from UI
+        const previousNotebooks = [...notebooks];
         setNotebooks(notebooks.filter(nb => nb.id !== id));
-        // TODO: Call backend to actually delete from database
-        console.log(`Deleted ${id}`);
+        
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${session?.access_token}` }
+          });
+          if (!res.ok) throw new Error("Delete failed");
+        } catch (error) {
+          console.error("Failed to delete:", error);
+          setNotebooks(previousNotebooks);
+          alert("Error: Could not delete the notebook.");
+        }
       }
     } else if (action === 'edit') {
       const newTitle = window.prompt("Enter new title:", currentTitle);
       if (newTitle && newTitle !== currentTitle) {
-        // Optimistically update UI
+        const previousNotebooks = [...notebooks];
         setNotebooks(notebooks.map(nb => nb.id === id ? { ...nb, title: newTitle } : nb));
-        // TODO: Call backend to actually save the new title
-        console.log(`Renamed ${id} to ${newTitle}`);
+        
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+            method: 'PUT',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}` 
+            },
+            body: JSON.stringify({ title: newTitle })
+          });
+          if (!res.ok) throw new Error("Update failed");
+        } catch (error) {
+          console.error("Failed to update:", error);
+          setNotebooks(previousNotebooks);
+          alert("Error: Could not rename the notebook.");
+        }
       }
     } else if (action === 'pin') {
-      console.log(`Pinned ${id}`);
-      // TODO: Implement pinning logic
+      const notebook = notebooks.find(nb => nb.id === id);
+      const newPinnedStatus = !notebook?.pinned; 
+      const previousNotebooks = [...notebooks];
+
+      setNotebooks(prev => prev.map(nb => nb.id === id ? { ...nb, pinned: newPinnedStatus } : nb));
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ pinned: newPinnedStatus })
+        });
+        if (!res.ok) throw new Error("Pinning failed");
+      } catch (error) {
+        console.error("Failed to toggle pin:", error);
+        setNotebooks(previousNotebooks);
+      }
     }
   };
 
@@ -92,7 +138,6 @@ export default function Dashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Mock source count for now until backend supports it natively
         const dataWithMockSources = data.map((nb: Notebook) => ({
           ...nb,
           sourceCount: Math.floor(Math.random() * 10) + 1
@@ -141,7 +186,6 @@ export default function Dashboard() {
     }
   };
 
-  // Search & Sort Functionality
   const filteredAndSortedNotebooks = [...notebooks]
     .filter(nb => nb.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
@@ -151,6 +195,9 @@ export default function Dashboard() {
         return a.title.localeCompare(b.title);
       }
     });
+
+  const pinnedNotebooks = filteredAndSortedNotebooks.filter(nb => Boolean(nb.pinned));
+  const recentNotebooks = filteredAndSortedNotebooks.filter(nb => !Boolean(nb.pinned));
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -168,7 +215,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#FAF8F4] text-[#201F1C] font-sans selection:bg-[#F1E2B8]">
       
-      {/* Navigation Header */}
       <header className="border-b border-[#E6E2D8] bg-[#FAF8F4]">
         <nav className="max-w-[1400px] mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -219,7 +265,6 @@ export default function Dashboard() {
 
       <main className="max-w-[1400px] mx-auto px-6 py-10">
         
-        {/* Top Controls Row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
           
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
@@ -245,7 +290,6 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-4">
             
-            {/* Search Input */}
             <div className="relative group">
               <Search className="w-4 h-4 text-[#9C988E] absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-[#201F1C] transition-colors" />
               <input 
@@ -257,7 +301,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* View Mode Toggles */}
             <div className="flex items-center bg-white border border-[#E6E2D8] rounded-full p-0.5 shrink-0">
               <button 
                 onClick={() => setViewMode('grid')}
@@ -273,17 +316,32 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="relative group flex items-center gap-2 text-sm text-[#201F1C] bg-white border border-[#E6E2D8] rounded-full px-4 py-2 shrink-0 cursor-pointer hover:bg-[#F1EFE9] transition-colors">
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'recent' | 'title')}
-                className="appearance-none bg-transparent border-none font-medium text-[#201F1C] focus:outline-none cursor-pointer pr-4 w-full"
+            {/* NEW: Custom Styled Sort Dropdown */}
+            <div className="relative shrink-0" ref={sortDropdownRef}>
+              <button 
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center justify-between gap-2 text-sm font-medium text-[#201F1C] bg-white border border-[#E6E2D8] rounded-full px-4 py-2 hover:bg-[#F1EFE9] transition-colors min-w-[135px]"
               >
-                <option value="recent">Most recent</option>
-                <option value="title">Title (A-Z)</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6B6862]" />
+                <span>{sortBy === 'recent' ? 'Most recent' : 'Title (A-Z)'}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-[#6B6862] transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isSortOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-[#E6E2D8] rounded-xl shadow-lg py-1 z-30">
+                  <button 
+                    onClick={() => { setSortBy('recent'); setIsSortOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-[#F1EFE9] transition-colors ${sortBy === 'recent' ? 'text-[#8C2F2F] font-medium bg-[#F6EAE6]/50' : 'text-[#201F1C]'}`}
+                  >
+                    Most recent
+                  </button>
+                  <button 
+                    onClick={() => { setSortBy('title'); setIsSortOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-[#F1EFE9] transition-colors ${sortBy === 'title' ? 'text-[#8C2F2F] font-medium bg-[#F6EAE6]/50' : 'text-[#201F1C]'}`}
+                  >
+                    Title (A-Z)
+                  </button>
+                </div>
+              )}
             </div>
             
             <button 
@@ -298,7 +356,7 @@ export default function Dashboard() {
         </div>
 
         {/* --- 1. FEATURED NOTEBOOKS SECTION --- */}
-        {(activeTab === 'all' || activeTab === 'featured') && !searchQuery && (
+        {(activeTab === 'featured' || (activeTab === 'all' && pinnedNotebooks.length === 0)) && !searchQuery && (
           <section className="mb-16">
             <h2 className="text-[22px] text-[#201F1C] mb-6">
               Featured notebooks
@@ -383,6 +441,27 @@ export default function Dashboard() {
             )}
           </section>
         )}
+        {/* --- 1. PINNED NOTEBOOKS SECTION --- */}
+        {pinnedNotebooks.length > 0 && !searchQuery && activeTab !== 'featured' && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Pin className="w-5 h-5 text-[#8C2F2F]" />
+              <h2 className="text-[22px] text-[#201F1C]">Pinned</h2>
+            </div>
+            <div className={`gap-5 ${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'flex flex-col'}`}>
+              {pinnedNotebooks.map(notebook => (
+                <ArchiveCard 
+                  key={notebook.id}
+                  {...notebook}
+                  pinned={Boolean(notebook.pinned)}
+                  date={formatDate(notebook.updated_at)}
+                  href={`/notebook/${notebook.id}`}
+                  onAction={handleCardAction}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* --- 2. RECENT NOTEBOOKS SECTION --- */}
         {(activeTab === 'all' || activeTab === 'my') && (
@@ -393,16 +472,12 @@ export default function Dashboard() {
               </h2>
               {searchQuery && (
                 <span className="text-sm font-medium text-[#8C2F2F] bg-[#F6EAE6] px-3 py-1 rounded-full">
-                  {searchQuery && (
-                    <span className="text-sm font-medium text-[#8C2F2F] bg-[#F6EAE6] px-3 py-1 rounded-full">
-                      {filteredAndSortedNotebooks.length} results for &quot;{searchQuery}&quot;
-                    </span>
-                  )}
+                  {recentNotebooks.length} results for &quot;{searchQuery}&quot;
                 </span>
               )}
             </div>
 
-            {filteredAndSortedNotebooks.length === 0 ? (
+            {recentNotebooks.length === 0 ? (
               <div className="w-full py-16 flex flex-col items-center justify-center border border-dashed border-[#D8D4C8] rounded-xl bg-white/50">
                 <p className="text-[#6B6862] mb-4 text-sm">
                   {searchQuery ? "No archives match your search." : "You haven't created any archives yet."}
@@ -427,7 +502,7 @@ export default function Dashboard() {
                 )}
 
                 {viewMode === 'grid' ? (
-                    filteredAndSortedNotebooks.map(notebook => (
+                    recentNotebooks.map(notebook => (
                       <ArchiveCard 
                         key={notebook.id}
                         id={notebook.id}

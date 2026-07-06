@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, MoreVertical, BookOpen, Clock, Trash2, Edit2, Pin } from 'lucide-react';
+import { Plus, MoreVertical, BookOpen, Clock, Trash2, Edit2, Pin, PinOff } from 'lucide-react';
 
 interface ArchiveCardProps {
   id?: string;
@@ -11,12 +11,14 @@ interface ArchiveCardProps {
   date?: string;
   sourceCount?: number;
   href?: string;
+  pinned?: boolean;
   onAction?: (action: 'delete' | 'edit' | 'pin', id: string, currentTitle: string) => void;
 }
 
-export function ArchiveCard({ id, isCreate, title, date, sourceCount, href = "/workspace", onAction }: ArchiveCardProps) {
+export function ArchiveCard({ id, isCreate, title, date, sourceCount, href = "/workspace", pinned, onAction }: ArchiveCardProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isPinned = Boolean(pinned);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -63,8 +65,13 @@ export function ArchiveCard({ id, isCreate, title, date, sourceCount, href = "/w
         <div className="w-9 h-9 rounded-lg bg-[#F6EAE6] flex items-center justify-center">
           <BookOpen className="w-4 h-4 text-[#8C2F2F]" />
         </div>
-        
-        <div className="relative" ref={dropdownRef}>
+        <div className="flex items-center gap-2">
+          {isPinned && (
+            <div className="rounded-full bg-[#F6EAE6] p-1.5">
+              <Pin className="w-3.5 h-3.5 text-[#8C2F2F] fill-[#8C2F2F]" />
+            </div>
+          )}
+          <div className="relative" ref={dropdownRef}>
           <button 
             className="p-1 text-[#9C988E] hover:text-[#201F1C] transition-colors rounded-md hover:bg-[#F1EFE9]" 
             onClick={handleDropdownClick}
@@ -90,10 +97,12 @@ export function ArchiveCard({ id, isCreate, title, date, sourceCount, href = "/w
                 onClick={(e) => handleActionClick(e, 'pin')}
                 className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
               >
-                <Pin className="w-3.5 h-3.5 text-[#6B6862]" /> Pin to top
+                {isPinned ? <PinOff className="w-3.5 h-3.5 text-[#6B6862]" /> : <Pin className="w-3.5 h-3.5 text-[#6B6862]" />}
+                {isPinned ? 'Unpin' : 'Pin to top'}
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
       

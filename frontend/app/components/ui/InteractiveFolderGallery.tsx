@@ -143,7 +143,7 @@ export function InteractiveFolderGallery({
 
         <motion.div 
           animate={{ opacity: isFolderOpen ? 1 : 0, y: isFolderOpen ? 0 : 50 }}
-          className="absolute bottom-10 px-6 py-3 rounded-full bg-surface border border-border-subtle shadow-sm text-stone text-sm font-medium uppercase tracking-widest pointer-events-none"
+          className="absolute bottom-8 px-3 py-1.5 rounded-full bg-white/70 backdrop-blur-sm border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-stone/80 text-[11px] font-medium uppercase tracking-[0.2em] pointer-events-none"
         >
           {dragHintText}
         </motion.div>

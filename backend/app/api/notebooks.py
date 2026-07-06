@@ -9,6 +9,7 @@ router = APIRouter()
 class NotebookUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
+    pinned: Optional[bool] = None
 
 # 1. Get all notebooks for the dashboard
 @router.get("/notebooks")
@@ -47,13 +48,22 @@ async def create_notebook(user=Depends(get_current_user)):
 @router.put("/notebooks/{notebook_id}")
 async def update_notebook(notebook_id: str, data: NotebookUpdate, user=Depends(get_current_user)):
     try:
-        update_data = {"updated_at": "now()"}
-        if data.title is not None: 
-            update_data["title"] = data.title
-        if data.content is not None: 
-            update_data["content"] = data.content
-            
+        update_data = {} # Remove "updated_at": "now()" if you don't want it to jump in recent order
+        if data.title is not None: update_data["title"] = data.title
+        if data.content is not None: update_data["content"] = data.content
+        if data.pinned is not None: update_data["pinned"] = data.pinned # Add this line
+        
         response = supabase.table("notebooks").update(update_data).eq("id", notebook_id).eq("user_id", user.id).execute()
-        return {"status": "success", "message": "Notebook saved"}
+        return {"status": "success", "message": "Notebook updated"}
+    except Exception as e:
+        print(f"DEBUGGING ERROR: {str(e)}") # Useful to see this in your Render logs
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Delete a notebook
+@router.delete("/notebooks/{notebook_id}")
+async def delete_notebook(notebook_id: str, user=Depends(get_current_user)):
+    try:
+        response = supabase.table("notebooks").delete().eq("id", notebook_id).eq("user_id", user.id).execute()
+        return {"status": "success", "message": "Notebook deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
