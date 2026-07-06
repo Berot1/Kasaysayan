@@ -23,8 +23,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kasaysayan | Historical Analysis",
+  title: "Kasaysayan",
   description: "Analyze Philippine historical documents with AI.",
+  icons: {
+    icon: '/logo2.png',
+  },
 };
 
 export default function RootLayout({

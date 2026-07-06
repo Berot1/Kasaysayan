@@ -11,10 +11,10 @@ import {
   Quote,
   Library,
   NotebookPen,
-  Landmark,
 } from 'lucide-react';
 import { InteractiveFolderGallery } from '@/app/components/ui/InteractiveFolderGallery';
 import { supabase } from '@/lib/supabaseClient';
+import { AccordionItem } from '@/app/components/ui/Accordion';
 
 const RIZAL_PORTRAIT = 'https://commons.wikimedia.org/wiki/Special:FilePath/Jose_Rizal_full.jpg?width=300';
 const KATIPUNAN_FLAG = 'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Katipunan.svg?width=300';
@@ -59,8 +59,8 @@ export default function LandingPage() {
       <header className="border-b border-border-subtle">
         <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-oxblood flex items-center justify-center">
-              <Landmark className="w-4 h-4 text-background" />
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-border-subtle bg-background/80 shadow-sm">
+              <Image src="/logo2.png" alt="Kasaysayan logo" fill sizes="36px" className="object-cover" />
             </div>
             <span className="font-semibold text-[15px] tracking-tight">Kasaysayan</span>
           </div>
@@ -68,11 +68,9 @@ export default function LandingPage() {
             <Link href="#how-it-works" className="hidden sm:block text-sm text-stone hover:text-charcoal transition-colors">
               How it works
             </Link>
-            {/* Change href to /auth */}
             <Link href="/auth" className="text-sm text-stone hover:text-charcoal transition-colors">
               Sign in
             </Link>
-            {/* Change href to /auth */}
             <Link
               href={getStartedHref}
               className="text-sm font-medium px-4 py-2 rounded-md border border-charcoal hover:bg-charcoal hover:text-background transition-colors focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
@@ -89,25 +87,25 @@ export default function LandingPage() {
           <div>
             <div className="inline-flex items-center gap-2 mb-6 text-[11px] font-mono uppercase tracking-[0.12em] text-oxblood bg-oxblood-muted px-3 py-1.5 rounded-full">
               <BookOpen className="w-3.5 h-3.5" />
-              Grounded in Philippine sources
+              Grounded in primary sources
             </div>
             <h1 className="font-display text-[2.75rem] md:text-[3.4rem] leading-[1.08] font-medium tracking-tight mb-6">
-              Ask Philippine
+              Query the archives of
               <br />
-              history anything.
+              Philippine history.
             </h1>
             <p className="text-lg text-stone leading-relaxed mb-9 max-w-md">
-              Upload Rizal&apos;s writings, Katipunan records, colonial-era maps,
-              or your own research notes. Kasaysayan answers strictly from what
-              you give it — every claim traced to a page.
+              Upload digitized manuscripts, Katipunan records, colonial-era maps, 
+              or personal notes. Kasaysayan synthesizes your private archive, providing 
+              answers strictly grounded in your documents with every claim traced back to the specific page.
             </p>
             <div className="flex items-center gap-5">
               <Link
                 href="/dashboard"
-                className="group flex items-center gap-2 bg-charcoal hover:bg-black text-background px-6 py-3.5 rounded-md text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
+                className="group flex items-center bg-charcoal hover:bg-black text-background px-6 py-3.5 rounded-md text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
               >
                 Try Kasaysayan
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="w-0 h-4 opacity-0 overflow-hidden transition-all duration-300 ease-out group-hover:w-4 group-hover:ml-2 group-hover:opacity-100" />
               </Link>
               <Link
                 href="#how-it-works"
@@ -136,91 +134,72 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Source types strip */}
-        <section className="py-24 border-t border-border-subtle">
-          {/* FIX: Changed text-muted to text-stone for better contrast */}
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone mb-6">
-            Reads across the archive
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {[
-              { img: RIZAL_PORTRAIT, label: 'Personal writings', sub: 'Letters, diaries, essays' },
-              { img: KATIPUNAN_FLAG, label: 'Revolutionary records', sub: 'Katipunan documents' },
-              { img: VELARDE_MAP, label: 'Colonial-era maps', sub: 'Charts and surveys' },
-              { img: NOLI_COVER, label: 'Published literature', sub: 'Novels and periodicals' },
-            ].map(({ img, label, sub }) => (
-              <div key={label} className="bg-surface border border-border-subtle rounded-xl overflow-hidden">
-                <div className="relative h-28 bg-muted flex items-center justify-center overflow-hidden">
-                  <Image src={img} alt={label} fill className="object-cover" unoptimized />
-                </div>
-                <div className="p-3">
-                  {/* FIX: Added text-charcoal for crisp primary labels */}
-                  <p className="text-sm font-medium text-charcoal">{label}</p>
-                  
-                  {/* FIX: Changed text-muted to text-stone for visible sub-labels */}
-                  <p className="text-xs text-stone mt-0.5">{sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="how-it-works" className="py-24 border-t border-border-subtle">
-          <div className="mb-14 max-w-xl">
-            {/* FIX: Changed text-muted to text-stone */}
-            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone">
-              How it works
-            </span>
-            <h2 className="font-display text-3xl font-medium tracking-tight mt-3 text-charcoal">
-              Three steps from archive to answer.
+        {/* How it works */}
+        <section id="how-it-works" className="py-24 md:py-32 border-t border-border-subtle">
+          <div className="mb-20 text-center max-w-2xl mx-auto">
+            <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight mt-4 text-charcoal">
+              Your AI-Powered Archival Partner
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="max-w-5xl mx-auto flex flex-col gap-24 md:gap-32">
             {[
               {
-                step: '01',
                 icon: Upload,
                 title: 'Upload your sources',
-                body: 'Add scanned letters, Katipunan documents, maps, or printed literature — Kasaysayan indexes them in place.',
+                body: 'Build a private knowledge base by uploading scanned letters, historical texts, or images. Kasaysayan extracts, OCRs, and indexes the text instantly, preparing it for deep analysis.',
+                imagePlaceholderText: 'Drop Screenshot of Workspace Upload Here',
               },
               {
-                step: '02',
                 icon: MessageSquareText,
-                title: 'Ask a question',
-                body: 'Ask in Filipino or English. It searches only within your uploaded material — nothing else.',
+                title: 'Contextual Querying',
+                body: 'Query your documents in Filipino or English. Once your sources are indexed, Kasaysayan acts as a research assistant, providing grounded analysis derived exclusively from the materials you have curated.',
+                imagePlaceholderText: 'Drop Screenshot of Chat Panel Here',
               },
               {
-                step: '03',
                 icon: Quote,
-                title: 'Get a cited answer',
-                body: 'Every response links back to the exact document and page it came from, so you can verify it yourself.',
+                title: 'See the source, not just the answer',
+                body: 'Gain confidence in every response. Kasaysayan provides clear, verifiable inline citations for its work, allowing you to trace every claim back to the exact paragraph in your archives.',
+                imagePlaceholderText: 'Drop Screenshot of Inline Citations Here',
               },
-            ].map(({ step, icon: Icon, title, body }) => (
-              <div
-                key={step}
-                className="bg-surface border border-border-subtle rounded-xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-9 h-9 rounded-lg bg-oxblood-muted flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-oxblood" />
+            ].map(({ icon: Icon, title, body, imagePlaceholderText }) => (
+              <div key={title} className="grid md:grid-cols-12 gap-8 md:gap-16 items-center">
+                
+                <div className="md:col-span-4 flex flex-col items-start text-left order-2 md:order-1">
+                  <div className="mb-6">
+                    <Icon className="w-7 h-7 text-charcoal" strokeWidth={1.5} />
                   </div>
-                  {/* FIX: Changed text-border-subtle to text-stone so the '01', '02' step numbers are visible */}
-                  <span className="font-mono text-xs text-stone">{step}</span>
+                  <h3 className="text-xl font-display font-medium text-charcoal mb-4">
+                    {title}
+                  </h3>
+                  <p className="text-[15px] text-stone leading-relaxed">
+                    {body}
+                  </p>
                 </div>
-                {/* FIX: Explicitly added text-charcoal for the card headers */}
-                <h3 className="font-medium text-[15px] text-charcoal mb-2">{title}</h3>
-                <p className="text-sm text-stone leading-relaxed">{body}</p>
+
+                <div className="md:col-span-8 order-1 md:order-2">
+                  <div className="w-full aspect-[16/10] bg-muted rounded-2xl border border-border-strong shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center overflow-hidden group relative">
+                    <div className="text-center px-6">
+                      <div className="w-12 h-12 rounded-full bg-surface border border-border-subtle flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <Upload className="w-5 h-5 text-stone" />
+                      </div>
+                      <p className="font-mono text-xs uppercase tracking-widest text-stone">
+                        {imagePlaceholderText}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             ))}
           </div>
         </section>
 
-        {/* Feature grid */}
+        {/* Feature */}
         <section className="py-24 border-t border-border-subtle">
           <div className="mb-14 max-w-xl">
-            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-              Why it&apos;s different
+            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone">
+              The Kasaysayan Standard
             </span>
             <h2 className="font-display text-3xl font-medium tracking-tight mt-3">
               Built for people who need to trust the answer.
@@ -231,18 +210,18 @@ export default function LandingPage() {
             {[
               {
                 icon: Library,
-                title: 'Strictly source-bound',
-                body: 'Answers are drawn only from what you upload — no outside knowledge blended in unnoticed.',
+                title: 'Strictly source-grounded',
+                body: 'Responses are formulated exclusively from your uploaded notebooks. The AI is restricted from injecting outside internet knowledge.',
               },
               {
                 icon: Quote,
-                title: 'Inline citations',
-                body: 'Every claim carries a reference back to its document and page, so nothing is taken on faith.',
+                title: 'Transparent verification',
+                body: 'Every assertion carries a reference back to its specific source document, ensuring nothing is taken on faith.',
               },
               {
                 icon: NotebookPen,
-                title: 'Bilingual by design',
-                body: 'Ask and read in Filipino or English, and compare passages across sources in either language.',
+                title: 'Bilingual comprehension',
+                body: 'Analyze and query documents seamlessly in both Filipino and English, bridging the gap between historical texts and modern research.',
               },
             ].map(({ icon: Icon, title, body }) => (
               <div key={title} className="p-6">
@@ -253,25 +232,65 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
+    
+        {/* FAQ */}
+        <section className="py-24 border-t border-border-subtle">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="mb-16">
+              <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone mb-4 block">
+                Support & Details
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight text-charcoal">
+                Frequently asked questions
+              </h2>
+            </div>
+            
+            <div className="border-b border-[#E6E2D8]">
+  {[
+    {
+      q: "How can I verify the historical accuracy of the AI's claims?",
+      a: "Kasaysayan operates on a 'grounded intelligence' model. Instead of drawing from general internet knowledge, the system is strictly constrained to your uploaded primary sources. Every assertion is anchored to a specific document and page, allowing you to trace the evidence back to its origin immediately."
+    },
+    {
+      q: "What happens to the archival documents I upload?",
+      a: "We treat your research as intellectual property. Your documents are hosted in a private, secure environment and are never used to train public AI models. Your archives remain entirely inaccessible to other users, ensuring the integrity of your private research remains intact."
+    },
+    {
+      q: "Can Kasaysayan analyze documents written in languages other than English?",
+      a: "Yes. The platform is specifically calibrated for the nuances of Philippine history. It offers deep comprehension for English, Filipino, and Spanish-era manuscripts. It can synthesize these languages during analysis, allowing you to bridge linguistic gaps between historical texts and modern research."
+    }
+  ].map((item, index) => (
+    <AccordionItem key={index} question={item.q} answer={item.a} />
+  ))}
+</div>
+          </div>
+        </section>
 
         {/* Closing CTA */}
-        <section className="py-24 border-t border-border-subtle flex flex-col items-center text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight mb-5 max-w-lg">
-            Bring your sources. Get answers you can check.
-          </h2>
-          <Link
-            href="/workspace"
-            className="group flex items-center gap-2 bg-charcoal hover:bg-black text-background px-6 py-3.5 rounded-md text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
-          >
-            Try Kasaysayan
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+        <section className="py-32 border-t border-border-subtle">
+          <div className="max-w-2xl mx-auto text-center px-6">
+            <h2 className="font-display text-3xl md:text-5xl font-medium tracking-tight text-charcoal mb-6">
+              Bring your archives. Discover the truth within them.
+            </h2>
+            <p className="text-stone text-lg mb-10 leading-relaxed">
+              Stop searching through fragmented folders. Consolidate your Philippine historical research into a single, intelligent, and verifiable repository.
+            </p>
+            <Link
+              href="/dashboard"
+              className="group inline-flex items-center bg-charcoal hover:bg-black text-background px-8 py-4 rounded-md text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
+            >
+              Begin your research
+              <ArrowRight className="w-0 h-4 opacity-0 overflow-hidden transition-all duration-300 ease-out group-hover:w-4 group-hover:ml-2 group-hover:opacity-100" />
+            </Link>
+            <p className="mt-6 text-[11px] font-mono text-stone uppercase tracking-widest">
+              No archives uploaded yet? Start with our samples.
+            </p>
+          </div>
         </section>
       </main>
 
       <footer className="border-t border-border-subtle">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          {/* FIX: Changed text-muted to text-stone so the copyright is visible */}
           <span className="text-xs text-stone font-mono">© {new Date().getFullYear()} Kasaysayan</span>
           <div className="flex gap-6 text-xs text-stone">
             <Link href="#" className="hover:text-charcoal transition-colors">Privacy</Link>

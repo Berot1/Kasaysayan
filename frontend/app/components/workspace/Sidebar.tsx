@@ -1,6 +1,7 @@
 import { useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Loader2, History, Library, Landmark } from 'lucide-react';
+import { Plus, Loader2, History, Library } from 'lucide-react';
 import { DocumentCard } from '../ui/DocumentCard';
 
 interface SidebarProps {
@@ -27,8 +28,8 @@ export function Sidebar({ isOpen, sources, isUploading, onFileSelect }: SidebarP
         {/* Header matched to Landing Page Navbar */}
         <div className="h-16 px-6 flex items-center border-b border-[#E6E2D8]">
           <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-7 h-7 rounded-md bg-[#8C2F2F] flex items-center justify-center">
-              <Landmark className="w-4 h-4 text-[#FAF8F4]" />
+            <div className="relative h-8 w-8 overflow-hidden rounded-md border border-[#E6E2D8] bg-[#FAF8F4] shadow-sm">
+              <Image src="/logo1.png" alt="Kasaysayan logo" fill className="object-contain p-1" />
             </div>
             <span className="font-semibold text-[15px] text-[#201F1C] tracking-tight">Kasaysayan</span>
           </Link>

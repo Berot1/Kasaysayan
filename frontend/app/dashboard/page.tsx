@@ -7,7 +7,7 @@ import type { Session } from '@supabase/supabase-js';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  Search, Settings, Landmark, User, Plus, Loader2, LogOut, 
+  Search, Settings, User, Plus, Loader2, LogOut, 
   LayoutGrid, List, ChevronDown, MoreVertical, Trash2, Edit2, Pin, Globe 
 } from 'lucide-react';
 import { ArchiveCard } from '../components/ui/ArchiveCard';
@@ -218,8 +218,8 @@ export default function Dashboard() {
       <header className="border-b border-[#E6E2D8] bg-[#FAF8F4]">
         <nav className="max-w-[1400px] mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-7 h-7 rounded-md bg-[#8C2F2F] flex items-center justify-center">
-              <Landmark className="w-4 h-4 text-[#FAF8F4]" />
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-[#E6E2D8] bg-[#FAF8F4] shadow-sm">
+              <Image src="/logo1.png" alt="Kasaysayan logo" fill sizes="36px" className="object-cover" />
             </div>
             <span className="font-semibold text-[15px] tracking-tight">Kasaysayan</span>
           </Link>

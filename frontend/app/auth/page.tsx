@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Landmark, Loader2, ShieldCheck, Mail } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
@@ -121,8 +122,8 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#FAF8F4] flex flex-col justify-center items-center p-6 text-[#201F1C] selection:bg-[#F1E2B8] font-sans">
       
       <Link href="/" className="mb-10 flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <div className="w-8 h-8 rounded-md bg-[#8C2F2F] flex items-center justify-center">
-          <Landmark className="w-5 h-5 text-[#FAF8F4]" />
+        <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-[#E6E2D8] bg-[#FAF8F4] shadow-sm">
+          <Image src="/logo2.png" alt="Kasaysayan logo" fill sizes="40px" className="object-cover" />
         </div>
         <span className="font-semibold text-xl tracking-tight">Kasaysayan</span>
       </Link>
