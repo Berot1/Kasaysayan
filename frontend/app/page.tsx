@@ -57,23 +57,23 @@ export default function LandingPage() {
       
       {/* Navigation */}
       <header className="border-b border-border-subtle">
-        <nav className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-border-subtle bg-background/80 shadow-sm">
+        <nav className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="relative h-8 w-8 sm:h-9 sm:w-9 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-background/80 shadow-sm">
               <Image src="/logo2.png" alt="Kasaysayan logo" fill sizes="36px" className="object-cover" />
             </div>
-            <span className="font-semibold text-[15px] tracking-tight">Kasaysayan</span>
+            <span className="font-semibold text-[14px] sm:text-[15px] tracking-tight truncate">Kasaysayan</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6 shrink-0">
             <Link href="#how-it-works" className="hidden sm:block text-sm text-stone hover:text-charcoal transition-colors">
               How it works
             </Link>
-            <Link href="/auth" className="text-sm text-stone hover:text-charcoal transition-colors">
+            <Link href="/auth" className="text-sm text-stone hover:text-charcoal transition-colors whitespace-nowrap">
               Sign in
             </Link>
             <Link
               href={getStartedHref}
-              className="text-sm font-medium px-4 py-2 rounded-md border border-charcoal hover:bg-charcoal hover:text-background transition-colors focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
+              className="text-sm font-medium px-3 sm:px-4 py-2 rounded-md border border-charcoal hover:bg-charcoal hover:text-background transition-colors focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2 whitespace-nowrap"
             >
               Get started
             </Link>
@@ -81,25 +81,25 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Hero */}
-        <section className="grid md:grid-cols-2 gap-8 items-center pt-16 pb-24">
+        <section className="grid md:grid-cols-2 gap-8 items-center pt-10 sm:pt-16 pb-16 sm:pb-24">
           <div>
-            <div className="inline-flex items-center gap-2 mb-6 text-[11px] font-mono uppercase tracking-[0.12em] text-oxblood bg-oxblood-muted px-3 py-1.5 rounded-full">
+            <div className="inline-flex items-center gap-2 mb-5 sm:mb-6 text-[11px] font-mono uppercase tracking-[0.12em] text-oxblood bg-oxblood-muted px-3 py-1.5 rounded-full">
               <BookOpen className="w-3.5 h-3.5" />
               Grounded in primary sources
             </div>
-            <h1 className="font-display text-[2.75rem] md:text-[3.4rem] leading-[1.08] font-medium tracking-tight mb-6">
+            <h1 className="font-display text-[2.1rem] sm:text-[2.75rem] md:text-[3.4rem] leading-[1.12] sm:leading-[1.08] font-medium tracking-tight mb-5 sm:mb-6">
               Query the archives of
               <br />
               Philippine history.
             </h1>
-            <p className="text-lg text-stone leading-relaxed mb-9 max-w-md">
+            <p className="text-base sm:text-lg text-stone leading-relaxed mb-7 sm:mb-9 max-w-md">
               Upload digitized manuscripts, Katipunan records, colonial-era maps, 
               or personal notes. Kasaysayan synthesizes your private archive, providing 
               answers strictly grounded in your documents with every claim traced back to the specific page.
             </p>
-            <div className="flex items-center gap-5">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
               <Link
                 href="/dashboard"
                 className="group flex items-center bg-charcoal hover:bg-black text-background px-6 py-3.5 rounded-md text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-oxblood focus-visible:ring-offset-2"
@@ -135,14 +135,14 @@ export default function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="py-24 md:py-32 border-t border-border-subtle">
-          <div className="mb-20 text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight mt-4 text-charcoal">
+        <section id="how-it-works" className="py-16 sm:py-24 md:py-32 border-t border-border-subtle">
+          <div className="mb-12 sm:mb-20 text-center max-w-2xl mx-auto">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight mt-4 text-charcoal">
               Your AI-Powered Archival Partner
             </h2>
           </div>
 
-          <div className="max-w-5xl mx-auto flex flex-col gap-24 md:gap-32">
+          <div className="max-w-5xl mx-auto flex flex-col gap-14 sm:gap-24 md:gap-32">
             {[
               {
                 icon: Upload,
@@ -196,17 +196,17 @@ export default function LandingPage() {
         </section>
 
         {/* Feature */}
-        <section className="py-24 border-t border-border-subtle">
-          <div className="mb-14 max-w-xl">
+        <section className="py-16 sm:py-24 border-t border-border-subtle">
+          <div className="mb-10 sm:mb-14 max-w-xl">
             <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone">
               The Kasaysayan Standard
             </span>
-            <h2 className="font-display text-3xl font-medium tracking-tight mt-3">
+            <h2 className="font-display text-2xl sm:text-3xl font-medium tracking-tight mt-3">
               Built for people who need to trust the answer.
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[
               {
                 icon: Library,
@@ -234,45 +234,43 @@ export default function LandingPage() {
         </section>
     
         {/* FAQ */}
-        <section className="py-24 border-t border-border-subtle">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-16">
-              <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone mb-4 block">
-                Support & Details
-              </span>
-              <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight text-charcoal">
-                Frequently asked questions
-              </h2>
-            </div>
-            
-            <div className="border-b border-[#E6E2D8]">
-              {[
-                {
-                  q: "How can I verify the historical accuracy of the AI's claims?",
-                  a: "Kasaysayan operates on a 'grounded intelligence' model. Instead of drawing from general internet knowledge, the system is strictly constrained to your uploaded primary sources. Every assertion is anchored to a specific document and page, allowing you to trace the evidence back to its origin immediately."
-                },
-                {
-                  q: "What happens to the archival documents I upload?",
-                  a: "We treat your research as intellectual property. Your documents are hosted in a private, secure environment and are never used to train public AI models. Your archives remain entirely inaccessible to other users, ensuring the integrity of your private research remains intact."
-                },
-                {
-                  q: "Can Kasaysayan analyze documents written in languages other than English?",
-                  a: "Yes. The platform is specifically calibrated for the nuances of Philippine history. It offers deep comprehension for English, Filipino, and Spanish-era manuscripts. It can synthesize these languages during analysis, allowing you to bridge linguistic gaps between historical texts and modern research."
-                }
-              ].map((item, index) => (
-                <AccordionItem key={index} question={item.q} answer={item.a} />
-              ))}
-            </div>
+        <section className="py-16 sm:py-24 border-t border-border-subtle">
+          <div className="mb-10 sm:mb-16">
+            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-stone mb-4 block">
+              Support & Details
+            </span>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight text-charcoal">
+              Frequently asked questions
+            </h2>
+          </div>
+
+          <div className="border-b border-[#E6E2D8]">
+            {[
+              {
+                q: "How can I verify the historical accuracy of the AI's claims?",
+                a: "Kasaysayan operates on a 'grounded intelligence' model. Instead of drawing from general internet knowledge, the system is strictly constrained to your uploaded primary sources. Every assertion is anchored to a specific document and page, allowing you to trace the evidence back to its origin immediately."
+              },
+              {
+                q: "What happens to the archival documents I upload?",
+                a: "We treat your research as intellectual property. Your documents are hosted in a private, secure environment and are never used to train public AI models. Your archives remain entirely inaccessible to other users, ensuring the integrity of your private research remains intact."
+              },
+              {
+                q: "Can Kasaysayan analyze documents written in languages other than English?",
+                a: "Yes. The platform is specifically calibrated for the nuances of Philippine history. It offers deep comprehension for English, Filipino, and Spanish-era manuscripts. It can synthesize these languages during analysis, allowing you to bridge linguistic gaps between historical texts and modern research."
+              }
+            ].map((item, index) => (
+              <AccordionItem key={index} question={item.q} answer={item.a} />
+            ))}
           </div>
         </section>
 
         {/* Closing CTA */}
-        <section className="py-32 border-t border-border-subtle">
-          <div className="max-w-2xl mx-auto text-center px-6">
-            <h2 className="font-display text-3xl md:text-5xl font-medium tracking-tight text-charcoal mb-6">
+        <section className="py-20 sm:py-32 border-t border-border-subtle">
+          <div className="max-w-2xl mx-auto text-center px-2 sm:px-6">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-medium tracking-tight text-charcoal mb-5 sm:mb-6">
               Bring your archives. Discover the truth within them.
             </h2>
-            <p className="text-stone text-lg mb-10 leading-relaxed">
+            <p className="text-stone text-base sm:text-lg mb-8 sm:mb-10 leading-relaxed">
               Stop searching through fragmented folders. Consolidate your Philippine historical research into a single, intelligent, and verifiable repository.
             </p>
             <Link
@@ -290,7 +288,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-border-subtle">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <span className="text-xs text-stone font-mono">© {new Date().getFullYear()} Kasaysayan</span>
           <div className="flex gap-6 text-xs text-stone">
             <Link href="#" className="hover:text-charcoal transition-colors">Privacy</Link>
