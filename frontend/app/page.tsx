@@ -246,23 +246,23 @@ export default function LandingPage() {
             </div>
             
             <div className="border-b border-[#E6E2D8]">
-  {[
-    {
-      q: "How can I verify the historical accuracy of the AI's claims?",
-      a: "Kasaysayan operates on a 'grounded intelligence' model. Instead of drawing from general internet knowledge, the system is strictly constrained to your uploaded primary sources. Every assertion is anchored to a specific document and page, allowing you to trace the evidence back to its origin immediately."
-    },
-    {
-      q: "What happens to the archival documents I upload?",
-      a: "We treat your research as intellectual property. Your documents are hosted in a private, secure environment and are never used to train public AI models. Your archives remain entirely inaccessible to other users, ensuring the integrity of your private research remains intact."
-    },
-    {
-      q: "Can Kasaysayan analyze documents written in languages other than English?",
-      a: "Yes. The platform is specifically calibrated for the nuances of Philippine history. It offers deep comprehension for English, Filipino, and Spanish-era manuscripts. It can synthesize these languages during analysis, allowing you to bridge linguistic gaps between historical texts and modern research."
-    }
-  ].map((item, index) => (
-    <AccordionItem key={index} question={item.q} answer={item.a} />
-  ))}
-</div>
+              {[
+                {
+                  q: "How can I verify the historical accuracy of the AI's claims?",
+                  a: "Kasaysayan operates on a 'grounded intelligence' model. Instead of drawing from general internet knowledge, the system is strictly constrained to your uploaded primary sources. Every assertion is anchored to a specific document and page, allowing you to trace the evidence back to its origin immediately."
+                },
+                {
+                  q: "What happens to the archival documents I upload?",
+                  a: "We treat your research as intellectual property. Your documents are hosted in a private, secure environment and are never used to train public AI models. Your archives remain entirely inaccessible to other users, ensuring the integrity of your private research remains intact."
+                },
+                {
+                  q: "Can Kasaysayan analyze documents written in languages other than English?",
+                  a: "Yes. The platform is specifically calibrated for the nuances of Philippine history. It offers deep comprehension for English, Filipino, and Spanish-era manuscripts. It can synthesize these languages during analysis, allowing you to bridge linguistic gaps between historical texts and modern research."
+                }
+              ].map((item, index) => (
+                <AccordionItem key={index} question={item.q} answer={item.a} />
+              ))}
+            </div>
           </div>
         </section>
 

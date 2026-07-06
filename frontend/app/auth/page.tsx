@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { Loader2, ShieldCheck, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, Mail, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
@@ -20,6 +20,9 @@ export default function AuthPage() {
   // OTP States
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +108,35 @@ export default function AuthPage() {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+      setMessage("A new code has been sent to your inbox.");
+      setResendCooldown(30);
+      const interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signInWithGoogle = async () => {
     setLoading(true);
     setError(null);
@@ -132,23 +164,23 @@ export default function AuthPage() {
         <div className="bg-white border border-[#E6E2D8] rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center">
           
           <h2 className="font-display text-2xl font-medium tracking-tight mb-2">
-            {otpSent ? 'Verify your email' : (isLogin ? 'Welcome back' : 'Secure Account Creation')}
+            {otpSent ? 'Verify your email' : (isLogin ? 'Welcome back' : 'Create your account')}
           </h2>
           <p className="text-[#6B6862] text-[15px] mb-6">
             {otpSent 
               ? 'Enter the 6-digit code sent to your inbox.' 
-              : (isLogin ? 'Sign in to access your historical archives.' : 'Set up a high-security researcher account.')}
+              : (isLogin ? 'Sign in to access your archives.' : 'Set up your account to start exploring the archives.')}
           </p>
 
           {error && (
-            <div className="mb-6 p-3 bg-[#F6EAE6] text-[#8C2F2F] text-sm rounded-lg border border-[#8C2F2F]/20 text-left flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
+            <div role="alert" aria-live="assertive" className="mb-6 p-3 bg-[#F6EAE6] text-[#8C2F2F] text-sm rounded-lg border border-[#8C2F2F]/20 text-left flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
           )}
           
           {message && (
-            <div className="mb-6 p-3 bg-[#E6E2D8]/50 text-[#201F1C] text-sm rounded-lg border border-[#E6E2D8] text-left flex items-start gap-2">
+            <div role="status" aria-live="polite" className="mb-6 p-3 bg-[#E6E2D8]/50 text-[#201F1C] text-sm rounded-lg border border-[#E6E2D8] text-left flex items-start gap-2">
               <Mail className="w-4 h-4 mt-0.5 shrink-0 text-[#6B6862]" />
               <span>{message}</span>
             </div>
@@ -158,12 +190,16 @@ export default function AuthPage() {
           {otpSent ? (
             <form onSubmit={handleVerifyOtp} className="space-y-5 text-left">
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#201F1C]">One-Time Password (OTP)</label>
+                <label htmlFor="otp" className="block text-sm font-medium mb-2 text-[#201F1C]">One-Time Password (OTP)</label>
                 <input 
+                  id="otp"
                   type="text" 
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
                   required
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
                   className="w-full px-4 py-2.5 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-center tracking-[0.5em] text-lg font-mono placeholder:text-[#9C988E]"
                   maxLength={6}
@@ -172,50 +208,95 @@ export default function AuthPage() {
               <button 
                 type="submit" 
                 disabled={loading || otp.length < 6}
-                className="w-full flex justify-center items-center gap-2 bg-[#201F1C] hover:bg-black text-[#FAF8F4] py-3 rounded-lg text-[15px] font-medium transition-colors disabled:bg-[#9C988E]"
+                className="w-full flex justify-center items-center gap-2 bg-[#201F1C] hover:bg-black text-[#FAF8F4] py-3 rounded-lg text-[15px] font-medium transition-colors disabled:bg-[#9C988E] disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Account'}
               </button>
+              <p className="text-center text-[13px] text-[#6B6862]">
+                Didn&apos;t get a code?{' '}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || loading}
+                  className="font-medium text-[#201F1C] underline underline-offset-4 decoration-[#E6E2D8] hover:decoration-[#201F1C] transition-colors disabled:text-[#9C988E] disabled:cursor-not-allowed disabled:no-underline"
+                >
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                </button>
+              </p>
             </form>
           ) : (
             /* STANDARD AUTH FORM */
             <form onSubmit={handleAuth} className="space-y-4 text-left">
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#201F1C]">Email address</label>
+                <label htmlFor="email" className="block text-sm font-medium mb-2 text-[#201F1C]">Email address</label>
                 <input 
+                  id="email"
                   type="email" 
+                  autoComplete="email"
+                  autoFocus
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="researcher@university.edu"
+                  placeholder="you@example.com"
                   className="w-full px-4 py-2.5 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-[15px] placeholder:text-[#9C988E]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-[#201F1C]">Password</label>
-                <input 
-                  type="password" 
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-2.5 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-[15px] placeholder:text-[#9C988E]"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-[#201F1C]">Password</label>
+                  {isLogin && (
+                    <Link href="/forgot-password" className="text-[13px] text-[#6B6862] hover:text-[#201F1C] transition-colors underline underline-offset-4 decoration-[#E6E2D8] hover:decoration-[#201F1C]">
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
+                <div className="relative">
+                  <input 
+                    id="password"
+                    type={showPassword ? "text" : "password"} 
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 pr-11 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-[15px] placeholder:text-[#9C988E]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-[#9C988E] hover:text-[#201F1C] transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-[#201F1C]">Confirm Password</label>
-                  <input 
-                    type="password" 
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-2.5 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-[15px] placeholder:text-[#9C988E]"
-                  />
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2 text-[#201F1C]">Confirm Password</label>
+                  <div className="relative">
+                    <input 
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"} 
+                      autoComplete="new-password"
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-2.5 pr-11 bg-[#FAF8F4] border border-[#E6E2D8] rounded-lg focus:border-[#201F1C]/40 focus:shadow-sm focus:outline-none transition-all text-[15px] placeholder:text-[#9C988E]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-[#9C988E] hover:text-[#201F1C] transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   <p className="text-[11px] text-[#6B6862] mt-2 leading-relaxed">
-                    Must be 8+ characters and contain at least one uppercase, one lowercase, one number, and one special character (!@#$%).
+                    Use at least 8 characters, including an uppercase letter, a lowercase letter, a number, and a special character (!@#$%).
                   </p>
                 </div>
               )}
@@ -223,9 +304,9 @@ export default function AuthPage() {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 bg-[#201F1C] hover:bg-black text-[#FAF8F4] py-3 rounded-lg text-[15px] font-medium transition-colors mt-2 disabled:bg-[#9C988E]"
+                className="w-full flex justify-center items-center gap-2 bg-[#201F1C] hover:bg-black text-[#FAF8F4] py-3 rounded-lg text-[15px] font-medium transition-colors mt-2 disabled:bg-[#9C988E] disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Sign In Securely' : 'Create Secure Account')}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
               </button>
             </form>
           )}
@@ -245,7 +326,8 @@ export default function AuthPage() {
                 <button 
                   onClick={signInWithGoogle}
                   type="button"
-                  className="w-full mt-6 flex justify-center items-center gap-3 bg-white border border-[#E6E2D8] hover:bg-[#FAF8F4] text-[#201F1C] py-2.5 rounded-lg text-[15px] font-medium transition-all shadow-sm"
+                  disabled={loading}
+                  className="w-full mt-6 flex justify-center items-center gap-3 bg-white border border-[#E6E2D8] hover:bg-[#FAF8F4] text-[#201F1C] py-2.5 rounded-lg text-[15px] font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -263,9 +345,9 @@ export default function AuthPage() {
                   onClick={() => { setIsLogin(!isLogin); setError(null); setMessage(null); }}
                   className="text-[14px] text-[#6B6862] hover:text-[#201F1C] transition-colors focus:outline-none"
                 >
-                  {isLogin ? "Need a researcher account? " : "Already have an account? "}
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
                   <span className="font-medium underline underline-offset-4 decoration-[#E6E2D8] hover:decoration-[#201F1C] transition-colors">
-                    {isLogin ? "Sign up securely" : "Sign in"}
+                    {isLogin ? "Sign up" : "Sign in"}
                   </span>
                 </button>
               </div>
