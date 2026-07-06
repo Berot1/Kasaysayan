@@ -25,6 +25,6 @@ app.include_router(search_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
 app.include_router(notebooks_router, prefix="/api")
 
-@app.get("/", methods=["GET", "HEAD"])
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {"message": "Kasaysayan API is online and CORS is configured."}
