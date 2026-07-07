@@ -3,18 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  BookOpen,
-  ArrowRight,
-  Upload,
-  MessageSquareText,
-  Quote,
-  Library,
-  NotebookPen,
-} from 'lucide-react';
+// Corrected Lucide imports
+import { Upload, MessageSquareText, Quote, BookOpen, ArrowRight, Library, NotebookPen } from 'lucide-react';
 import { InteractiveFolderGallery } from '@/app/components/ui/InteractiveFolderGallery';
 import { supabase } from '@/lib/supabaseClient';
 import { AccordionItem } from '@/app/components/ui/Accordion';
+import { Card } from '@/app/components/ui/card';
+// Removed Button import as it was unused
+import { UploadIllustration, QueryIllustration, CitationIllustration } from '@/app/components/ui/FeatureIllustrations';
 
 const RIZAL_PORTRAIT = 'https://commons.wikimedia.org/wiki/Special:FilePath/Jose_Rizal_full.jpg?width=300';
 const KATIPUNAN_FLAG = 'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Katipunan.svg?width=300';
@@ -135,63 +131,47 @@ export default function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="py-16 sm:py-24 md:py-32 border-t border-border-subtle">
-          <div className="mb-12 sm:mb-20 text-center max-w-2xl mx-auto">
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight mt-4 text-charcoal">
-              Your AI-Powered Archival Partner
-            </h2>
-          </div>
+        <section id="how-it-works" className="py-24 border-t border-border-subtle">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-12 text-center max-w-2xl mx-auto">
+              <h2 className="font-display text-3xl md:text-4xl font-medium tracking-tight text-charcoal">
+                Grounded Intelligence for Historical Research
+              </h2>
+            </div>
 
-          <div className="max-w-5xl mx-auto flex flex-col gap-14 sm:gap-24 md:gap-32">
-            {[
-              {
-                icon: Upload,
-                title: 'Upload your sources',
-                body: 'Build a private knowledge base by uploading scanned letters, historical texts, or images. Kasaysayan extracts, OCRs, and indexes the text instantly, preparing it for deep analysis.',
-                imagePlaceholderText: 'Drop Screenshot of Workspace Upload Here',
-              },
-              {
-                icon: MessageSquareText,
-                title: 'Contextual Querying',
-                body: 'Query your documents in Filipino or English. Once your sources are indexed, Kasaysayan acts as a research assistant, providing grounded analysis derived exclusively from the materials you have curated.',
-                imagePlaceholderText: 'Drop Screenshot of Chat Panel Here',
-              },
-              {
-                icon: Quote,
-                title: 'See the source, not just the answer',
-                body: 'Gain confidence in every response. Kasaysayan provides clear, verifiable inline citations for its work, allowing you to trace every claim back to the exact paragraph in your archives.',
-                imagePlaceholderText: 'Drop Screenshot of Inline Citations Here',
-              },
-            ].map(({ icon: Icon, title, body, imagePlaceholderText }) => (
-              <div key={title} className="grid md:grid-cols-12 gap-8 md:gap-16 items-center">
-                
-                <div className="md:col-span-4 flex flex-col items-start text-left order-2 md:order-1">
-                  <div className="mb-6">
-                    <Icon className="w-7 h-7 text-charcoal" strokeWidth={1.5} />
-                  </div>
-                  <h3 className="text-xl font-display font-medium text-charcoal mb-4">
-                    {title}
-                  </h3>
-                  <p className="text-[15px] text-stone leading-relaxed">
-                    {body}
-                  </p>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Feature 1: Upload */}
+              <Card className="overflow-hidden p-6 bg-white hover:shadow-md transition-shadow">
+                <Upload className="text-oxblood w-6 h-6" strokeWidth={1.5} />
+                <h3 className="font-display text-charcoal mt-5 text-xl font-medium">Upload your sources</h3>
+                <p className="text-stone mt-3 text-sm leading-relaxed text-balance">
+                  Build a private knowledge base by uploading scanned letters, historical texts, or images.
+                </p>
+                <UploadIllustration />
+              </Card>
+
+              {/* Feature 2: Query */}
+              <Card className="group overflow-hidden px-6 pt-6 bg-white hover:shadow-md transition-shadow">
+                <MessageSquareText className="text-oxblood w-6 h-6" strokeWidth={1.5} />
+                <h3 className="font-display text-charcoal mt-5 text-xl font-medium">Contextual Querying</h3>
+                <p className="text-stone mt-3 text-sm leading-relaxed text-balance">
+                  Query your documents in Filipino or English. Get analysis strictly grounded in your materials.
+                </p>
+                <QueryIllustration />
+              </Card>
+
+              {/* Feature 3: Citations */}
+              <Card className="group overflow-hidden px-6 pt-6 bg-white hover:shadow-md transition-shadow">
+                <Quote className="text-oxblood w-6 h-6" strokeWidth={1.5} />
+                <h3 className="font-display text-charcoal mt-5 text-xl font-medium">Verifiable Citations</h3>
+                <p className="text-stone mt-3 text-sm leading-relaxed text-balance">
+                  Every assertion carries a reference back to its specific source document and paragraph.
+                </p>
+                <div className="mask-b-from-50 -mx-2 -mt-2 px-2 pt-2">
+                  <CitationIllustration />
                 </div>
-
-                <div className="md:col-span-8 order-1 md:order-2">
-                  <div className="w-full aspect-[16/10] bg-muted rounded-2xl border border-border-strong shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center overflow-hidden group relative">
-                    <div className="text-center px-6">
-                      <div className="w-12 h-12 rounded-full bg-surface border border-border-subtle flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <Upload className="w-5 h-5 text-stone" />
-                      </div>
-                      <p className="font-mono text-xs uppercase tracking-widest text-stone">
-                        {imagePlaceholderText}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            ))}
+              </Card>
+            </div>
           </div>
         </section>
 
