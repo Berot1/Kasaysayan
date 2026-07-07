@@ -211,7 +211,7 @@ export default function LandingPage() {
               {
                 icon: Library,
                 title: 'Strictly source-grounded',
-                body: 'Responses are formulated exclusively from your uploaded notebooks. The AI is restricted from injecting outside internet knowledge.',
+                body: 'Responses are formulated exclusively from your uploaded archives. The AI is restricted from injecting outside internet knowledge.',
               },
               {
                 icon: Quote,

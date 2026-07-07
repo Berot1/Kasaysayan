@@ -93,9 +93,11 @@ def extract_text_from_file(file_bytes: bytes, mime_type: str) -> str:
     elif mime_type.startswith("image/"):
         image = Image.open(io.BytesIO(file_bytes))
         text = pytesseract.image_to_string(image)
+    elif mime_type == "text/plain":
+        text = file_bytes.decode("utf-8")
     return text
 
-def process_and_ingest(text: str, filename: str, user_id: str, notebook_id: str = "default"):
+def process_and_ingest(text: str, filename: str, user_id: str, archive_id: str = "default"):
     print(f"DEBUG: Processing {filename}. Text length: {len(text)}")
     chunks = process_and_chunk(text)
     
@@ -110,9 +112,9 @@ def process_and_ingest(text: str, filename: str, user_id: str, notebook_id: str 
             supabase.table("documents").insert({
                 "content": chunk,
                 "embedding": vectors[j],
-                "metadata": {"filename": filename, "notebook_id": notebook_id}, 
-                "notebook_id": notebook_id,
-                "user_id": user_id # <-- Save the document to this specific user
+                "metadata": {"filename": filename, "archive_id": archive_id}, 
+                "archive_id": archive_id,
+                "user_id": user_id,
             }).execute()
             
         print("Batch saved successfully! Pausing for 10 seconds to respect rate limits...")

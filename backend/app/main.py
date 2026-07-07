@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.ingest import router as ingest_router
 from app.api.search import router as search_router 
 from app.api.upload import router as upload_router
-from app.api.notebooks import router as notebooks_router
+from app.api.archives import router as archives_router
 
 app = FastAPI(title="Kasaysayan API")
 
@@ -23,7 +23,7 @@ app.add_middleware(
 app.include_router(ingest_router, prefix="/api")
 app.include_router(search_router, prefix="/api") 
 app.include_router(upload_router, prefix="/api")
-app.include_router(notebooks_router, prefix="/api")
+app.include_router(archives_router, prefix="/api")
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root():

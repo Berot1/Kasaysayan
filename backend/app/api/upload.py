@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from app.services.rag_service import extract_text_from_file, process_and_ingest
 from app.core.database import supabase
 from app.core.auth import get_current_user
@@ -7,7 +7,8 @@ router = APIRouter()
 
 @router.post("/upload")
 async def upload_document(
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
+    archive_id: str = Form("default"),
     user=Depends(get_current_user)
 ):
     try:
@@ -17,10 +18,17 @@ async def upload_document(
         if not text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from file.")
             
-        # Pass user.id to the ingestion pipeline
-        process_and_ingest(text, file.filename, user.id)
-        return {"message": f"Successfully processed {file.filename}"}
+        # Pass both user.id and archive_id to the ingestion pipeline
+        process_and_ingest(text, file.filename, user.id, archive_id)
+        
+        # Return the text so the frontend can render it immediately
+        return {
+            "message": f"Successfully processed {file.filename}",
+            "filename": file.filename,
+            "text": text 
+        }
     except Exception as e:
+        print(f"UPLOAD ERROR: {str(e)}") # This will print the EXACT reason it failed in your terminal
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/documents")

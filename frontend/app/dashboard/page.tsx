@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
@@ -14,7 +14,7 @@ import { ArchiveCard } from '../components/ui/ArchiveCard';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
-interface Notebook {
+interface Archive {
   id: string;
   title: string;
   updated_at: string;
@@ -28,7 +28,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   
   // Data States
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [archives, setArchives] = useState<Archive[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   
   // UI Controls States
@@ -67,29 +67,29 @@ export default function Dashboard() {
     if (action === 'delete') {
       const confirmDelete = window.confirm(`Are you sure you want to delete "${currentTitle}"?`);
       if (confirmDelete) {
-        const previousNotebooks = [...notebooks];
-        setNotebooks(notebooks.filter(nb => nb.id !== id));
+        const previousArchives = [...archives];
+        setArchives(archives.filter(nb => nb.id !== id));
         
         try {
-          const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+          const res = await fetch(`${BACKEND_URL}/api/archives/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${session?.access_token}` }
           });
           if (!res.ok) throw new Error("Delete failed");
         } catch (error) {
           console.error("Failed to delete:", error);
-          setNotebooks(previousNotebooks);
-          alert("Error: Could not delete the notebook.");
+          setArchives(previousArchives);
+          alert("Error: Could not delete the archive.");
         }
       }
     } else if (action === 'edit') {
       const newTitle = window.prompt("Enter new title:", currentTitle);
       if (newTitle && newTitle !== currentTitle) {
-        const previousNotebooks = [...notebooks];
-        setNotebooks(notebooks.map(nb => nb.id === id ? { ...nb, title: newTitle } : nb));
+        const previousArchives = [...archives];
+        setArchives(archives.map(nb => nb.id === id ? { ...nb, title: newTitle } : nb));
         
         try {
-          const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+          const res = await fetch(`${BACKEND_URL}/api/archives/${id}`, {
             method: 'PUT',
             headers: { 
               'Content-Type': 'application/json',
@@ -100,19 +100,19 @@ export default function Dashboard() {
           if (!res.ok) throw new Error("Update failed");
         } catch (error) {
           console.error("Failed to update:", error);
-          setNotebooks(previousNotebooks);
-          alert("Error: Could not rename the notebook.");
+          setArchives(previousArchives);
+          alert("Error: Could not rename the archive.");
         }
       }
     } else if (action === 'pin') {
-      const notebook = notebooks.find(nb => nb.id === id);
-      const newPinnedStatus = !notebook?.pinned; 
-      const previousNotebooks = [...notebooks];
+      const archive = archives.find(nb => nb.id === id);
+      const newPinnedStatus = !archive?.pinned; 
+      const previousArchives = [...archives];
 
-      setNotebooks(prev => prev.map(nb => nb.id === id ? { ...nb, pinned: newPinnedStatus } : nb));
+      setArchives(prev => prev.map(nb => nb.id === id ? { ...nb, pinned: newPinnedStatus } : nb));
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/notebooks/${id}`, {
+        const res = await fetch(`${BACKEND_URL}/api/archives/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
           body: JSON.stringify({ pinned: newPinnedStatus })
@@ -120,7 +120,7 @@ export default function Dashboard() {
         if (!res.ok) throw new Error("Pinning failed");
       } catch (error) {
         console.error("Failed to toggle pin:", error);
-        setNotebooks(previousNotebooks);
+        setArchives(previousArchives);
       }
     }
   };
@@ -131,54 +131,65 @@ export default function Dashboard() {
     handleCardAction(action, id, currentTitle);
   };
 
-  const fetchNotebooks = async (token: string) => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/notebooks`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const dataWithMockSources = data.map((nb: Notebook) => ({
-          ...nb,
-          sourceCount: Math.floor(Math.random() * 10) + 1
-        }));
-        setNotebooks(dataWithMockSources);
-      }
-    } catch (err) {
-      console.error("Failed to fetch notebooks", err);
+  const fetchArchives = useCallback(async (token: string) => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/archives`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    // CRITICAL: If unauthorized, force logout
+    if (res.status === 401 || res.status === 403 || res.status === 500) {
+      console.warn("Auth token invalid or expired. Signing out...");
+      await supabase.auth.signOut();
+      router.push('/auth');
+      return;
     }
-  };
+
+    if (res.ok) {
+      const data = await res.json();
+      
+      // Default to 0 until the backend is updated to send the real count
+      const dataWithRealSources = data.map((archive: Archive) => ({
+        ...archive,
+        sourceCount: archive.sourceCount || 0 
+      }));
+      setArchives(dataWithRealSources);
+    }
+  } catch (err) {
+    console.error("Failed to fetch archives", err);
+  }
+  }, [router]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/auth');
-      } else {
-        setSession(session);
-        await fetchNotebooks(session.access_token);
-      }
-      setIsLoading(false);
-    };
-    checkAuth();
-  }, [router]);
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/auth');
+    } else {
+      setSession(session);
+      await fetchArchives(session.access_token);
+    }
+    setIsLoading(false);
+  };
+  checkAuth();
+}, [router, fetchArchives]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/');
   };
 
-  const handleCreateNotebook = async () => {
+  const handleCreateArchive = async () => {
     if (!session) return;
     setIsCreating(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/notebooks`, {
+      const res = await fetch(`${BACKEND_URL}/api/archives`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       if (res.ok) {
-        const newNotebook = await res.json();
-        router.push(`/notebook/${newNotebook.id}`);
+        const newArchive = await res.json();
+        router.push(`/archive/${newArchive.id}`);
       }
     } catch (err) {
       console.error(err);
@@ -186,7 +197,7 @@ export default function Dashboard() {
     }
   };
 
-  const filteredAndSortedNotebooks = [...notebooks]
+  const filteredAndSortedArchives = [...archives]
     .filter(nb => nb.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       if (sortBy === 'recent') {
@@ -196,8 +207,8 @@ export default function Dashboard() {
       }
     });
 
-  const pinnedNotebooks = filteredAndSortedNotebooks.filter(nb => Boolean(nb.pinned));
-  const recentNotebooks = filteredAndSortedNotebooks.filter(nb => !Boolean(nb.pinned));
+  const pinnedArchives = filteredAndSortedArchives.filter(nb => Boolean(nb.pinned));
+  const recentArchives = filteredAndSortedArchives.filter(nb => !Boolean(nb.pinned));
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -278,13 +289,13 @@ export default function Dashboard() {
                onClick={() => setActiveTab('my')}
                className={`px-4 py-2 text-[13px] font-medium rounded-full whitespace-nowrap transition-colors ${activeTab === 'my' ? 'bg-white border border-[#E6E2D8] shadow-sm text-[#201F1C]' : 'text-[#6B6862] hover:text-[#201F1C] hover:bg-[#E6E2D8]/30'}`}
              >
-               My notebooks
+               My archives
              </button>
              <button 
                onClick={() => setActiveTab('featured')}
                className={`px-4 py-2 text-[13px] font-medium rounded-full whitespace-nowrap transition-colors ${activeTab === 'featured' ? 'bg-white border border-[#E6E2D8] shadow-sm text-[#201F1C]' : 'text-[#6B6862] hover:text-[#201F1C] hover:bg-[#E6E2D8]/30'}`}
              >
-               Featured notebooks
+               Featured archives
              </button>
           </div>
 
@@ -347,7 +358,7 @@ export default function Dashboard() {
               </div>
               
               <button 
-                onClick={handleCreateNotebook}
+                onClick={handleCreateArchive}
                 disabled={isCreating}
                 aria-label="Create new"
                 className="flex items-center justify-center gap-2 bg-[#1A1A1A] hover:bg-black disabled:bg-[#6B6862] text-white w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-2.5 rounded-full text-[13px] font-medium transition-colors shrink-0"
@@ -359,11 +370,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* --- 1. FEATURED NOTEBOOKS SECTION --- */}
-        {(activeTab === 'featured' || (activeTab === 'all' && pinnedNotebooks.length === 0)) && !searchQuery && (
+        {/* --- 1. FEATURED ARCHIVES SECTION --- */}
+        {(activeTab === 'featured' || (activeTab === 'all' && pinnedArchives.length === 0)) && !searchQuery && (
           <section className="mb-16">
             <h2 className="text-[22px] text-[#201F1C] mb-6">
-              Featured notebooks
+              Featured Archives
             </h2>
             
             {viewMode === 'grid' ? (
@@ -451,21 +462,21 @@ export default function Dashboard() {
             )}
           </section>
         )}
-        {/* --- 1. PINNED NOTEBOOKS SECTION --- */}
-        {pinnedNotebooks.length > 0 && !searchQuery && activeTab !== 'featured' && (
+        {/* --- 1. PINNED ARCHIVES SECTION --- */}
+        {pinnedArchives.length > 0 && !searchQuery && activeTab !== 'featured' && (
           <section className="mb-12">
             <div className="flex items-center gap-2 mb-6">
               <Pin className="w-5 h-5 text-[#8C2F2F]" />
               <h2 className="text-[22px] text-[#201F1C]">Pinned</h2>
             </div>
             <div className={`gap-5 ${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'flex flex-col'}`}>
-              {pinnedNotebooks.map(notebook => (
+              {pinnedArchives.map(archive => (
                 <ArchiveCard 
-                  key={notebook.id}
-                  {...notebook}
-                  pinned={Boolean(notebook.pinned)}
-                  date={formatDate(notebook.updated_at)}
-                  href={`/notebook/${notebook.id}`}
+                  key={archive.id}
+                  {...archive}
+                  pinned={Boolean(archive.pinned)}
+                  date={formatDate(archive.updated_at)}
+                  href={`/archive/${archive.id}`}
                   onAction={handleCardAction}
                 />
               ))}
@@ -473,28 +484,28 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* --- 2. RECENT NOTEBOOKS SECTION --- */}
+        {/* --- 2. RECENT ARCHIVES SECTION --- */}
         {(activeTab === 'all' || activeTab === 'my') && (
           <section className="mb-16">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[22px] text-[#201F1C]">
-                Recent notebooks
+                Recent archives
               </h2>
               {searchQuery && (
                 <span className="text-sm font-medium text-[#8C2F2F] bg-[#F6EAE6] px-3 py-1 rounded-full">
-                  {recentNotebooks.length} results for &quot;{searchQuery}&quot;
+                  {recentArchives.length} results for &quot;{searchQuery}&quot;
                 </span>
               )}
             </div>
 
-            {recentNotebooks.length === 0 ? (
+            {recentArchives.length === 0 ? (
               <div className="w-full py-16 flex flex-col items-center justify-center border border-dashed border-[#D8D4C8] rounded-xl bg-white/50">
                 <p className="text-[#6B6862] mb-4 text-sm">
                   {searchQuery ? "No archives match your search." : "You haven't created any archives yet."}
                 </p>
                 {!searchQuery && (
                   <button 
-                    onClick={handleCreateNotebook}
+                    onClick={handleCreateArchive}
                     className="text-sm font-medium text-[#8C2F2F] hover:underline underline-offset-4"
                   >
                     Create your first archive
@@ -506,20 +517,20 @@ export default function Dashboard() {
                 
                 {/* Only show the 'Create' card in grid view when not searching */}
                 {viewMode === 'grid' && !searchQuery && (
-                  <div onClick={handleCreateNotebook} className="cursor-pointer">
+                  <div onClick={handleCreateArchive} className="cursor-pointer">
                     <ArchiveCard isCreate href="#" />
                   </div>
                 )}
 
                 {viewMode === 'grid' ? (
-                    recentNotebooks.map(notebook => (
+                    recentArchives.map(archive => (
                       <ArchiveCard 
-                        key={notebook.id}
-                        id={notebook.id}
-                        title={notebook.title} 
-                        date={formatDate(notebook.updated_at)} 
-                        sourceCount={notebook.sourceCount} 
-                        href={`/notebook/${notebook.id}`}
+                        key={archive.id}
+                        id={archive.id}
+                        title={archive.title} 
+                        date={formatDate(archive.updated_at)} 
+                        sourceCount={archive.sourceCount} 
+                        href={`/archive/${archive.id}`}
                         onAction={handleCardAction}
                       />
                     ))
@@ -535,11 +546,11 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="flex flex-col">
-                      {filteredAndSortedNotebooks.map(notebook => (
-                        <div key={notebook.id} className="group relative flex flex-col gap-1.5 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center py-3.5 sm:py-4 border-b border-[#EFEDE6] hover:bg-[#F1EFE9]/50 transition-colors px-2">
+                      {filteredAndSortedArchives.map(archive => (
+                        <div key={archive.id} className="group relative flex flex-col gap-1.5 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center py-3.5 sm:py-4 border-b border-[#EFEDE6] hover:bg-[#F1EFE9]/50 transition-colors px-2">
                           <div className="flex items-center justify-between gap-2 sm:contents">
                             <div className="sm:col-span-5 flex items-center gap-3 min-w-0">
-                              <Link href={`/notebook/${notebook.id}`} className="flex items-center gap-3 w-full min-w-0">
+                              <Link href={`/archive/${archive.id}`} className="flex items-center gap-3 w-full min-w-0">
                               <div className="w-6 h-6 shrink-0 flex items-center justify-center text-[#8C2F2F]">
                                 <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
                                     <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -547,36 +558,36 @@ export default function Dashboard() {
                                     <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
                               </div>
-                              <span className="font-medium text-[14px] text-[#201F1C] truncate group-hover:text-[#8C2F2F] transition-colors">{notebook.title}</span>
+                              <span className="font-medium text-[14px] text-[#201F1C] truncate group-hover:text-[#8C2F2F] transition-colors">{archive.title}</span>
                               </Link>
                             </div>
-                            <div className="sm:hidden shrink-0 relative" ref={openListDropdownId === notebook.id ? listDropdownRef : null}>
+                            <div className="sm:hidden shrink-0 relative" ref={openListDropdownId === archive.id ? listDropdownRef : null}>
                               <button 
                                 className="p-1.5 text-[#9C988E] hover:text-[#201F1C] hover:bg-[#E6E2D8] rounded-md transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  setOpenListDropdownId(openListDropdownId === notebook.id ? null : notebook.id);
+                                  setOpenListDropdownId(openListDropdownId === archive.id ? null : archive.id);
                                 }}
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </button>
-                              {openListDropdownId === notebook.id && (
+                              {openListDropdownId === archive.id && (
                                   <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-[#E6E2D8] rounded-lg shadow-lg py-1 z-20">
                                     <button 
-                                      onClick={(e) => handleListAction(e, 'delete', notebook.id, notebook.title)}
+                                      onClick={(e) => handleListAction(e, 'delete', archive.id, archive.title)}
                                       className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                     >
                                       <Trash2 className="w-3.5 h-3.5 text-[#6B6862]" /> Delete
                                     </button>
                                     <button 
-                                      onClick={(e) => handleListAction(e, 'edit', notebook.id, notebook.title)}
+                                      onClick={(e) => handleListAction(e, 'edit', archive.id, archive.title)}
                                       className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                     >
                                       <Edit2 className="w-3.5 h-3.5 text-[#6B6862]" /> Edit title
                                     </button>
                                     <button 
-                                      onClick={(e) => handleListAction(e, 'pin', notebook.id, notebook.title)}
+                                      onClick={(e) => handleListAction(e, 'pin', archive.id, archive.title)}
                                       className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                     >
                                       <Pin className="w-3.5 h-3.5 text-[#6B6862]" /> Pin to top
@@ -586,39 +597,39 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="text-[12px] text-[#6B6862] flex items-center gap-1.5 sm:hidden pl-9">
-                            {notebook.sourceCount} Sources <span aria-hidden="true">•</span> {formatDate(notebook.created_at)} <span aria-hidden="true">•</span> Owner
+                            {archive.sourceCount} Sources <span aria-hidden="true">•</span> {formatDate(archive.created_at)} <span aria-hidden="true">•</span> Owner
                           </div>
-                          <div className="hidden sm:block sm:col-span-2 text-[13px] text-[#6B6862]">{notebook.sourceCount} Sources</div>
-                          <div className="hidden sm:block sm:col-span-2 text-[13px] text-[#6B6862]">{formatDate(notebook.created_at)}</div>
+                          <div className="hidden sm:block sm:col-span-2 text-[13px] text-[#6B6862]">{archive.sourceCount} Sources</div>
+                          <div className="hidden sm:block sm:col-span-2 text-[13px] text-[#6B6862]">{formatDate(archive.created_at)}</div>
                           <div className="hidden sm:block sm:col-span-2 text-[13px] text-[#6B6862]">Owner</div>
-                          <div className="hidden sm:flex sm:col-span-1 justify-end relative" ref={openListDropdownId === notebook.id ? listDropdownRef : null}>
+                          <div className="hidden sm:flex sm:col-span-1 justify-end relative" ref={openListDropdownId === archive.id ? listDropdownRef : null}>
                             <button 
                               className="p-1.5 text-[#9C988E] hover:text-[#201F1C] hover:bg-[#E6E2D8] rounded-md transition-colors"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setOpenListDropdownId(openListDropdownId === notebook.id ? null : notebook.id);
+                                setOpenListDropdownId(openListDropdownId === archive.id ? null : archive.id);
                               }}
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
                             
-                            {openListDropdownId === notebook.id && (
+                            {openListDropdownId === archive.id && (
                                 <div className="absolute right-8 top-0 mt-1 w-40 bg-white border border-[#E6E2D8] rounded-lg shadow-lg py-1 z-20">
                                   <button 
-                                    onClick={(e) => handleListAction(e, 'delete', notebook.id, notebook.title)}
+                                    onClick={(e) => handleListAction(e, 'delete', archive.id, archive.title)}
                                     className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                   >
                                     <Trash2 className="w-3.5 h-3.5 text-[#6B6862]" /> Delete
                                   </button>
                                   <button 
-                                    onClick={(e) => handleListAction(e, 'edit', notebook.id, notebook.title)}
+                                    onClick={(e) => handleListAction(e, 'edit', archive.id, archive.title)}
                                     className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                   >
                                     <Edit2 className="w-3.5 h-3.5 text-[#6B6862]" /> Edit title
                                   </button>
                                   <button 
-                                    onClick={(e) => handleListAction(e, 'pin', notebook.id, notebook.title)}
+                                    onClick={(e) => handleListAction(e, 'pin', archive.id, archive.title)}
                                     className="w-full text-left px-4 py-2 text-sm text-[#201F1C] hover:bg-[#F1EFE9] flex items-center gap-2"
                                   >
                                     <Pin className="w-3.5 h-3.5 text-[#6B6862]" /> Pin to top
