@@ -25,11 +25,20 @@ async def search(data: SearchQuery, user=Depends(get_current_user)):
         )
         
         ai_answer = generate_ai_answer(data.query, results)
+
+        # Corrected: Citation processing
+        citations = []
+        for doc in results:
+            meta = doc.get("metadata", {})
+            if "filename" in meta:
+                citations.append({"name": meta["filename"]})
         
+        # Corrected: Return is now OUTSIDE the for loop
         return {
             "status": "success", 
             "answer": ai_answer,
-            "results": results
+            "results": results,
+            "citations": citations,
         }
     except Exception as e:
         print(f"DEBUGGING ERROR: {str(e)}")

@@ -13,12 +13,17 @@ export function useArchive(archiveId: string) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Archive data
-  const [title, setTitle] = useState('Loading...');
+  const [title, setTitleState] = useState('Loading...');
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+  const setTitle = (newTitle: string) => {
+    setTitleState(newTitle);
+    setIsDirty(true);
+  };
 
   // Sources
   const [sources, setSources] = useState<ArchiveSource[]>([]);
@@ -91,12 +96,21 @@ export function useArchive(archiveId: string) {
           router.push('/dashboard');
         }
 
-        const docRes = await fetch(`${BACKEND_URL}/api/archives/${archiveId}/document`, {
+        const sourcesRes = await fetch(`${BACKEND_URL}/api/archives/${archiveId}/sources`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        if (sourcesRes.ok) {
+          const sourcesData = await sourcesRes.json();
+          setSources(sourcesData); // This populates your sidebar correctly
+        }
+
+        const docRes = await fetch(`${BACKEND_URL}/api/archives/${archiveId}/sources`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
         if (docRes.ok) {
           const docData = await docRes.json();
+          
           if (docData.text) {
             const blob = new Blob([docData.text], { type: 'text/plain' });
             setSources([{
@@ -135,14 +149,27 @@ export function useArchive(archiveId: string) {
   const handleSave = useCallback(async () => {
     if (!session) return;
     setIsSaving(true);
-    const ok = await persistArchive(title, notes);
-    if (ok) {
-      setIsDirty(false);
-      setLastSavedAt(new Date());
-    } else {
-      pushToast('error', 'Failed to save your changes. Please try again.');
+    
+    // Move the logic directly here
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/archives/${archiveId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ title, notes })
+      });
+      
+      if (res.ok) {
+        setIsDirty(false);
+        setLastSavedAt(new Date());
+      } else {
+        pushToast('error', 'Failed to save your changes. Please try again.');
+      }
+    } catch (error) {
+      console.error("Failed to save:", error);
+      pushToast('error', 'Failed to save your changes.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   }, [session, archiveId, title, notes, pushToast]);
 
   const handleSaveResponseToNote = async (content: string, citations?: Citation[]) => {
@@ -170,11 +197,7 @@ export function useArchive(archiveId: string) {
   };
 
   const activeNote = notes.find(n => n.id === activeNoteId) || null;
-
-  const openNote = (id: string) => {
-    setActiveNoteId(id);
-  };
-
+  
   const handleAddNote = () => {
     const now = new Date().toISOString();
     const newNote: Note = {
@@ -237,32 +260,40 @@ export function useArchive(archiveId: string) {
 
   const processUpload = async (file: File) => {
     if (!file || !session) return;
-    const objectUrl = URL.createObjectURL(file);
-    const newSource: ArchiveSource = { name: file.name, url: objectUrl, type: file.type || 'application/octet-stream' };
-    setSources(prev => [...prev, newSource]);
-
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('archive_id', archiveId);
-
+    
     try {
       const res = await fetch(`${BACKEND_URL}/api/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
         body: formData
       });
+      
       if (!res.ok) {
         pushToast('error', `Failed to process "${file.name}".`);
       } else {
-        pushToast('success', `"${file.name}" added to sources.`);
+        pushToast('success', `"${file.name}" added.`);
+        
+        // FIX: Append the new source to the existing list instead of replacing it
+        const newSource = {
+          name: file.name,
+          url: URL.createObjectURL(file),
+          type: file.type,
+          rawText: '' // The backend processed it, we don't necessarily need rawText here
+        };
+        
+        setSources(prev => [...prev, newSource]);
+        
+        setIsDirty(true);
+        await handleSave(); 
       }
-    } catch (err) {
-      console.error("Upload failed", err);
-      pushToast('error', `Could not upload "${file.name}". Check your connection.`);
+    } catch (_) {
+      pushToast('error', `Could not upload "${file.name}".`);
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 

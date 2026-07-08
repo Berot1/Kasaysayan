@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Any
 from app.core.database import supabase
 from app.core.auth import get_current_user
 
@@ -10,6 +10,7 @@ class ArchiveUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     pinned: Optional[bool] = None
+    notes: Optional[List[Any]] = None
 
 # 1. Get all archives for the dashboard
 @router.get("/archives")
@@ -48,10 +49,11 @@ async def create_archive(user=Depends(get_current_user)):
 @router.put("/archives/{archive_id}")
 async def update_archive(archive_id: str, data: ArchiveUpdate, user=Depends(get_current_user)):
     try:
-        update_data = {} # Remove "updated_at": "now()" if you don't want it to jump in recent order
+        update_data = {}
         if data.title is not None: update_data["title"] = data.title
         if data.content is not None: update_data["content"] = data.content
-        if data.pinned is not None: update_data["pinned"] = data.pinned # Add this line
+        if data.pinned is not None: update_data["pinned"] = data.pinned
+        if data.notes is not None: update_data["notes"] = data.notes # Add this line
         
         response = supabase.table("archives").update(update_data).eq("id", archive_id).eq("user_id", user.id).execute()
         return {"status": "success", "message": "Archive updated"}
@@ -85,5 +87,23 @@ async def get_archive_document(archive_id: str, user=Depends(get_current_user)):
         filename = response.data[0].get("metadata", {}).get("filename", "Archival Source")
         
         return {"text": full_text, "filename": filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/archives/{archive_id}/sources")
+async def get_archive_sources(archive_id: str, user=Depends(get_current_user)):
+    try:
+        # Get all documents for this archive
+        response = supabase.table("documents").select("metadata").eq("archive_id", archive_id).eq("user_id", user.id).execute()
+        
+        unique_files = {}
+        for row in response.data:
+            meta = row.get("metadata", {})
+            filename = meta.get("filename")
+            if filename:
+                # Use filename as key to get unique list
+                unique_files[filename] = {"name": filename, "type": "text/plain", "url": "#"}
+                
+        return list(unique_files.values())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,4 +1,4 @@
-import { useState, useEffect, } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   PanelRightClose, Trash2, PenLine, BookOpen,
   MoreVertical, Plus, ChevronLeft, Undo2, Redo2, Bold, Italic,
@@ -52,7 +52,6 @@ export function StudioPanel({
 }: StudioPanelProps) {
 
   const [openNoteMenuId, setOpenNoteMenuId] = useState<string | null>(null);
-
   const [isPreview, setIsPreview] = useState(false);
 
   const openNote = (id: string) => {
@@ -60,13 +59,17 @@ export function StudioPanel({
     setOpenNoteMenuId(null);
   };
 
-  const editor = useEditor({
-    extensions: [
+  const extensions = useMemo(() => [
     StarterKit,
     Link.configure({
-      openOnClick: false, // Prevents jumping to the link while you're editing
+      openOnClick: false, 
     }),
-  ],
+  ], []);
+
+  const editor = useEditor({
+    // 3. Pass the memoized extensions here
+    extensions, 
+    immediatelyRender: false, 
     content: activeNote?.content || '',
     editorProps: {
       attributes: {
