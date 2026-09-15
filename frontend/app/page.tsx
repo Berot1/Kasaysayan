@@ -86,7 +86,7 @@ export default function LandingPage() {
             </h1>
             
             <p className="text-lg sm:text-xl text-stone leading-relaxed mb-10 max-w-2xl mx-auto animate-[fadeInUp_0.8s_ease-out_0.2s_both]">
-              Upload digitized manuscripts, colonial records, or personal notes. Synthesize your private archive and get answers strictly grounded in your documents with verifiable citations.
+              Upload digitized manuscripts, historical records, or personal notes. Synthesize your private archive and get answers strictly grounded in your documents with verifiable citations.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-[fadeInUp_0.8s_ease-out_0.3s_both]">

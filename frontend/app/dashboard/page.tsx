@@ -289,13 +289,13 @@ export default function Dashboard() {
                onClick={() => setActiveTab('my')}
                className={`px-4 py-2 text-[13px] font-medium rounded-full whitespace-nowrap transition-colors ${activeTab === 'my' ? 'bg-white border border-[#E6E2D8] shadow-sm text-[#201F1C]' : 'text-[#6B6862] hover:text-[#201F1C] hover:bg-[#E6E2D8]/30'}`}
              >
-               My archives
+               My Notebooks
              </button>
              <button 
                onClick={() => setActiveTab('featured')}
                className={`px-4 py-2 text-[13px] font-medium rounded-full whitespace-nowrap transition-colors ${activeTab === 'featured' ? 'bg-white border border-[#E6E2D8] shadow-sm text-[#201F1C]' : 'text-[#6B6862] hover:text-[#201F1C] hover:bg-[#E6E2D8]/30'}`}
              >
-               Featured archives
+               Featured Notebooks
              </button>
           </div>
 
@@ -305,7 +305,7 @@ export default function Dashboard() {
               <Search className="w-4 h-4 text-[#9C988E] absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-[#201F1C] transition-colors" />
               <input 
                 type="text" 
-                placeholder="Search archives..." 
+                placeholder="Search notebooks..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-[#E6E2D8] rounded-full outline-none focus:border-[#201F1C]/40 focus:shadow-sm transition-all"
@@ -374,7 +374,7 @@ export default function Dashboard() {
         {(activeTab === 'featured' || (activeTab === 'all' && pinnedArchives.length === 0)) && !searchQuery && (
           <section className="mb-16">
             <h2 className="text-[22px] text-[#201F1C] mb-6">
-              Featured Archives
+              Featured Notebooks
             </h2>
             
             {viewMode === 'grid' ? (
@@ -489,7 +489,7 @@ export default function Dashboard() {
           <section className="mb-16">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-[22px] text-[#201F1C]">
-                Recent archives
+                Recent notebooks
               </h2>
               {searchQuery && (
                 <span className="text-sm font-medium text-[#8C2F2F] bg-[#F6EAE6] px-3 py-1 rounded-full">
